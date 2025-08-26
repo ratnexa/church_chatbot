@@ -1,7 +1,11 @@
+import os
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from llama_index.core.tools import FunctionTool
+from dotenv import load_dotenv
+import json
+load_dotenv()
 
 # Set up Google Sheets API credentials
 scope = [
@@ -9,7 +13,13 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 try:
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    # Local (with .env) or Production (e.g., Azure): Load from environment variable
+    json_str = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    if not json_str:
+        raise Exception("No Google credentials found in file or environment variable")
+    json_data = json.loads(json_str)
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(json_data, scope)
+
     client = gspread.authorize(creds)
 except Exception as e:
     raise Exception(f"Failed to initialize Google Sheets client: {str(e)}")
